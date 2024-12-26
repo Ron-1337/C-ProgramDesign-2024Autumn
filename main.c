@@ -50,6 +50,13 @@ int load_order();
 int release_memory();
 int exit_program();
 
+int search_by_name();
+int search_by_level();
+int search_by_destination();
+int search_by_start_date();
+int search_by_days();
+int search_by_amount();
+
 // 添加全局变量来保存订单链表的头指针
 Order* head = NULL;
 
@@ -58,7 +65,7 @@ int main() {
   int flag = 0;
   const Menu menu_list[] = {
       {"创建订单", create_order}, {"显示订单", show_order},
-      {"搜索订单", search_order}, {"保存订单", save_order},
+      {"查询订单", search_order}, {"保存订单", save_order},
       {"加载订单", load_order},   {"退出程序", exit_program},
   };
   while (flag != -1) {
@@ -117,9 +124,15 @@ int show_menu(const Menu menu_list[], int menu_size) {
           break;
       }
     } else if (key == KEY_ENTER) {
+      if (menu_list[currentChoice].callback_function == NULL) {
+        return 0;
+      }
       return menu_list[currentChoice].callback_function();
     } else if (toupper(key) >= 'A' && toupper(key) <= 'A' + menu_size - 1) {
       currentChoice = toupper(key) - 'A';
+      if (menu_list[currentChoice].callback_function == NULL) {
+        return 0;
+      }
       return menu_list[currentChoice].callback_function();
     }
     continue;
@@ -202,7 +215,165 @@ int show_order() {
 }
 
 int search_order() {
-  printf("搜索订单\n");
+  const Menu search_menu[] = {
+      {"按姓名查询", search_by_name},
+      {"按等级查询", search_by_level},
+      {"按目的地查询", search_by_destination},
+      {"按出发日期查询", search_by_start_date},
+      {"按旅游天数查询", search_by_days},
+      {"按订单金额查询", search_by_amount},
+      {"返回主菜单", NULL},
+  };
+
+  show_menu(search_menu, sizeof(search_menu) / sizeof(search_menu[0]));
+  return 0;
+}
+
+int search_by_name() {
+  system("cls");
+  printf("请输入要查询的姓名：");
+  char name[8];
+  scanf("%8s", name);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (strcmp(current->name, name) == 0) {
+      hasResult = 1;
+      printf("找到订单：%s %s %s %d-%d-%d %d %lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
+  return 0;
+}
+
+int search_by_level() {
+  system("cls");
+  printf("请输入要查询的等级：");
+  int level;
+  scanf("%d", &level);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (current->level == level) {
+      hasResult = 1;
+      printf("找到订单：%s %s %s %d-%d-%d %d %lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
+  return 0;
+}
+
+int search_by_destination() {
+  system("cls");
+  printf("请输入要查询的目的地：");
+  char destination[10];
+  scanf("%10s", destination);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (strcmp(current->destination, destination) == 0) {
+      hasResult = 1;
+      printf("找到订单：%s %s %s %d-%d-%d %d %lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
+  return 0;
+}
+int search_by_start_date() {
+  system("cls");
+  printf("请输入要查询的出发日期（年 月 日）：");
+  Date startDate;
+  scanf("%d %d %d", &startDate.year, &startDate.month, &startDate.day);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (current->startDate.year == startDate.year &&
+        current->startDate.month == startDate.month &&
+        current->startDate.day == startDate.day) {
+      hasResult = 1;
+      printf("找到订单：%s %s %s %d-%d-%d %d %lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
+  return 0;
+}
+int search_by_days() {
+  system("cls");
+  printf("请输入要查询的旅游天数：");
+  int days;
+  scanf("%d", &days);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (current->days == days) {
+      hasResult = 1;
+      printf("找到订单：%s %s %s %d-%d-%d %d %lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
+  return 0;
+}
+int search_by_amount() {
+  system("cls");
+  printf("请输入要查询的订单金额：");
+  double amount;
+  scanf("%lf", &amount);
+  Order* current = head;
+  int hasResult = 0;
+  while (current != NULL) {
+    if (current->amount == amount) {
+      if (!hasResult) {
+        hasResult = 1;
+        printf("%8s %5s %10s  %10s %8s %8s\n", "姓名", "等级", "目的地",
+               "出发日期", "旅游天数", "订单金额");
+      }
+
+      printf("%8s %5s %10s  %4d-%02d-%02d %8d %8.2lf\n", current->name,
+             LEVEL_NAME[current->level - 1], current->destination,
+             current->startDate.year, current->startDate.month,
+             current->startDate.day, current->days, current->amount);
+    }
+    current = current->next;
+  }
+  if (!hasResult) {
+    printf("未找到订单\n");
+  }
+  system("pause");
   return 0;
 }
 
