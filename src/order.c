@@ -5,7 +5,7 @@
 int order_management() {
   int choice = 0;
   while (choice != -1) {
-    MenuList menu[] = {{"显示订单", 1}, {"搜索订单", 2}, {"添加订单", 3},
+    MenuList menu[] = {{"统计订单", 1}, {"搜索订单", 2}, {"添加订单", 3},
                        {"删除订单", 4}, {"加载订单", 5}, {"保存订单", 6},
                        {"返回", -1}};
     choice = show_menu("订单管理", menu, sizeof(menu) / sizeof(menu[0]));
@@ -36,7 +36,22 @@ int order_management() {
 }
 
 int show_orders() {
-  printf("========================= 订单列表 ========================\n");
+  MenuList menu[] = {{"按用户等级排序", 1}, {"按订单金额排序", 2}};
+  int choice = show_menu("订单统计", menu, sizeof(menu) / sizeof(menu[0]));
+  switch (choice) {
+    case 1:
+      sort_by_price();
+      sort_by_level();
+      break;
+
+    case 2:
+      sort_by_level();
+      sort_by_price();
+      break;
+  }
+
+  system("cls");
+  printf("========================= 订单统计 ========================\n");
   printf("%8s %4s %16s %10s %8s %8s\n", "姓名", "等级", "目的地", "开始日期",
          "持续天数", "价格");
   Order *current = orders_head;
@@ -260,3 +275,67 @@ int search_order_by_destination() {
   printf("[*] 正在按目的地搜索订单\n");
   return 0;
 }
+
+// 按等级从高到低排序
+int compare_by_level(Order *a, Order *b) { return b->level - a->level; }
+
+// 按价格从高到低排序
+int compare_by_price(Order *a, Order *b) { return b->price - a->price; }
+
+// 排序函数 传入比较函数
+int sort_orders(CompareFunc compare) {
+  if (orders_head == NULL || orders_head->next == NULL) {
+    return 0;  // 空链表或只有一个节点无需排序
+  }
+
+  int swapped;
+  Order *ptr1;
+  Order *lptr = NULL;
+
+  do {
+    swapped = 0;
+    ptr1 = orders_head;
+
+    while (ptr1->next != lptr) {
+      if (compare(ptr1, ptr1->next) > 0) {
+        // 交换节点数据
+        char temp_name[ORDER_NAME_MAX_LENGTH];
+        strcpy(temp_name, ptr1->name);
+        strcpy(ptr1->name, ptr1->next->name);
+        strcpy(ptr1->next->name, temp_name);
+
+        int temp_level = ptr1->level;
+        ptr1->level = ptr1->next->level;
+        ptr1->next->level = temp_level;
+
+        int temp_destination_id = ptr1->destination_id;
+        ptr1->destination_id = ptr1->next->destination_id;
+        ptr1->next->destination_id = temp_destination_id;
+
+        Date temp_date = ptr1->start_date;
+        ptr1->start_date = ptr1->next->start_date;
+        ptr1->next->start_date = temp_date;
+
+        int temp_duration = ptr1->duration;
+        ptr1->duration = ptr1->next->duration;
+        ptr1->next->duration = temp_duration;
+
+        double temp_price = ptr1->price;
+        ptr1->price = ptr1->next->price;
+        ptr1->next->price = temp_price;
+
+        swapped = 1;
+      }
+      ptr1 = ptr1->next;
+    }
+    lptr = ptr1;
+  } while (swapped);
+
+  return 0;
+}
+
+// 按等级排序的包装函数
+int sort_by_level() { return sort_orders(compare_by_level); }
+
+// 按价格排序的包装函数
+int sort_by_price() { return sort_orders(compare_by_price); }
