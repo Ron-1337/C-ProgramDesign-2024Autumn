@@ -15,8 +15,34 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.c">
+    <ClCompile Include="src\define.c">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\destination.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\order.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\define.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\destination.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\order.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="src\utils.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
