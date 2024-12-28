@@ -4,6 +4,8 @@
 #define KEY_UP 72
 #define KEY_DOWN 80
 #define KEY_ENTER 13
+#define DESTINATION_NAME_MAX_LENGTH 20
+#define ORDER_NAME_MAX_LENGTH 20
 
 /* 等级 */
 enum Level { BRONZE = 1, SILVER, GOLD, DIAMOND };
@@ -21,13 +23,13 @@ typedef struct Date {
 /* 目的地 */
 typedef struct Destination {
   int id;
-  char name[10];
+  char name[DESTINATION_NAME_MAX_LENGTH];
   struct Destination *next;
 } Destination;
 
 /* 订单 */
 typedef struct Order {
-  char name[10];
+  char name[ORDER_NAME_MAX_LENGTH];
   int level;
   int destination_id;
   Date start_date;

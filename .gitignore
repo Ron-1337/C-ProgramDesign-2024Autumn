@@ -403,3 +403,5 @@ FodyWeavers.xsd
 .vscode
 
 main.exe
+destinations.txt
+orders.txt

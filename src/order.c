@@ -22,3 +22,5 @@ int load_orders(Order *orders) {
   printf("[+] 已从%s加载%d条订单\n", ORDER_FILE, orders_count);
   return 0;
 }
+
+int release_order_memory() { return 0; }

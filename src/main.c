@@ -6,7 +6,9 @@
 #include "utils.h"
 
 Destination *destinations_head = NULL;
+Destination *destinations_tail = NULL;
 Order *orders_head = NULL;
+Order *orders_tail = NULL;
 
 int init();
 
@@ -30,14 +32,22 @@ int main() {
         break;
     }
   }
+  release_destination_memory();
+  release_order_memory();
   return 0;
 }
 
 int init() {
   printf("[*] 初始化中...\n");
-  load_destinations();
-  load_orders();
+  int flag = 0;
+  flag |= load_destinations();
+  flag |= load_orders();
+  if (flag != 0) {
+    printf("[-] 初始化时出现异常\n");
+    Sleep(1000);
+    return -1;
+  }
   printf("[+] 初始化完成\n");
-  system("pause");
+  Sleep(1000);
   return 0;
 }
