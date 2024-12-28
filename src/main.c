@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
 
 #include "define.h"
@@ -10,6 +12,8 @@ Destination *destinations_tail = NULL;
 Order *orders_head = NULL;
 Order *orders_tail = NULL;
 
+unsigned int destinations_count = 0;
+unsigned int orders_count = 0;
 int init();
 
 int main() {
@@ -44,10 +48,9 @@ int init() {
   flag |= load_orders();
   if (flag != 0) {
     printf("[-] 初始化时出现异常\n");
-    Sleep(1000);
+    Sleep(3000);
     return -1;
   }
   printf("[+] 初始化完成\n");
-  Sleep(1000);
   return 0;
 }

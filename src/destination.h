@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <windows.h>
 
 #include "define.h"
@@ -8,6 +9,7 @@
 
 extern Destination *destinations_head;
 extern Destination *destinations_tail;
+extern unsigned int destinations_count;
 
 extern unsigned long long destination_id_indicator;
 
@@ -34,6 +36,8 @@ int search_destination_by_name();
 int delete_destination_by_id();
 
 int delete_destination_by_name();
+
+char *get_destination_name(int id);
 
 int check_destination(Destination *destination);
 

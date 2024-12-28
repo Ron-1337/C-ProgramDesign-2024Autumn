@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "destination.h"
 
 // 添加全局变量的定义
@@ -39,14 +41,14 @@ int destination_management() {
 }
 
 int show_destinations() {
-  printf("=======目的地列表=======\n");
-  printf("%3s %20s\n", "ID", "名称");
+  printf("=====目的地列表=====\n");
+  printf("%3s %16s\n", "ID", "名称");
   Destination *current = destinations_head;
   while (current != NULL) {
-    printf("%3d %20s\n", current->id, current->name);
+    printf("%3d %16s\n", current->id, current->name);
     current = current->next;
   }
-  printf("========================\n");
+  printf("====================\n");
   system("pause");
   return 0;
 }
@@ -71,8 +73,11 @@ int add_destination() {
   new_dest->next = NULL;  // 初始化 next 指针
 
   printf("请输入目的地名称: ");
-  scanf("%20s", new_dest->name);
-  printf("请输入目的地ID: ");
+  char name_format[10];
+  sprintf(name_format, "%%%ds", DESTINATION_NAME_MAX_LENGTH);
+  scanf(name_format, new_dest->name);
+  getchar();  // 清除输入缓冲区中的换行符
+  printf("请输入目的地ID(0-127): ");
   scanf("%d", &new_dest->id);
 
   if (check_destination(new_dest)) {
@@ -119,22 +124,20 @@ int delete_destination() {
 
 int load_destinations() {
   printf("[*] 正在加载目的地\n");
-  destination_id_indicator = 0;
   release_destination_memory();
-  int destinations_count = 0;
-  destinations_head = NULL;
+  destinations_count = 0;
 
   FILE *file = fopen(DESTINATION_FILE, "r");
   if (file == NULL) {
     printf("[-] 无法打开文件%s\n", DESTINATION_FILE);
+    fclose(file);
     return -1;
   }
 
-  destinations_tail = NULL;
   int id;
   char name[21];
 
-  while (fscanf(file, "%d %20s", &id, name) != EOF) {
+  while (fscanf(file, "%d %16s", &id, name) != EOF) {
     Destination *new_dest = (Destination *)malloc(sizeof(Destination));
     new_dest->id = id;
     strcpy(new_dest->name, name);
@@ -169,7 +172,7 @@ int load_destinations() {
 
 int save_destinations() {
   printf("[*] 正在保存目的地\n");
-  int destinations_count = 0;
+  destinations_count = 0;
   Destination *current = destinations_head;
 
   FILE *file = fopen(DESTINATION_FILE, "w");
@@ -201,6 +204,7 @@ int release_destination_memory() {
   }
 
   destinations_head = NULL;
+  destinations_tail = NULL;
   destination_id_indicator = 0;
   return 0;
 }
@@ -229,8 +233,9 @@ int check_destination(Destination *destination) {
 
 int search_destination_by_id() {
   int id;
-  printf("请输入目的地ID: ");
+  printf("请输入目的地ID(0-127): ");
   scanf("%d", &id);
+  Destination *current = destinations_head;
   switch (check_destination_id(id)) {
     case -1:
       printf("[-] 目的地ID超出范围\n");
@@ -239,7 +244,6 @@ int search_destination_by_id() {
       printf("[-] 目的地ID不存在\n");
       return -1;
     case 1:
-      Destination *current = destinations_head;
       while (current != NULL && current->id != id) {
         current = current->next;
       }
@@ -269,6 +273,10 @@ int delete_destination_by_id() {
   int id;
   printf("请输入目的地ID: ");
   scanf("%d", &id);
+
+  Destination *current = destinations_head;
+  Destination *prev = NULL;
+
   switch (check_destination_id(id)) {
     case -1:
       printf("[-] 目的地ID超出范围\n");
@@ -277,8 +285,6 @@ int delete_destination_by_id() {
       printf("[-] 目的地ID不存在\n");
       return -1;
     case 1:
-      Destination *current = destinations_head;
-      Destination *prev = NULL;
       while (current != NULL && current->id != id) {
         prev = current;
         current = current->next;
@@ -292,10 +298,15 @@ int delete_destination_by_id() {
       } else {
         prev->next = current->next;
       }
+      if (current == destinations_tail) {
+        destinations_tail = prev;
+      }
       printf("[+] 已删除目的地ID: %d, 目的地名称: %s\n", current->id,
              current->name);
+      free(current);
       return 0;
   }
+  return -1;
 }
 
 int delete_destination_by_name() {
@@ -314,6 +325,9 @@ int delete_destination_by_name() {
     } else {
       prev->next = current->next;
     }
+    if (current == destinations_tail) {
+      destinations_tail = prev;
+    }
     printf("[+] 已删除目的地ID: %d, 目的地名称: %s\n", current->id,
            current->name);
     return 0;
@@ -321,6 +335,17 @@ int delete_destination_by_name() {
     printf("[-] 目的地名称不存在\n");
     return -1;
   }
+}
+
+char *get_destination_name(int id) {
+  Destination *current = destinations_head;
+  while (current != NULL && current->id != id) {
+    current = current->next;
+  }
+  if (current == NULL) {
+    return NULL;
+  }
+  return current->name;
 }
 
 /* 检查目的地名称
@@ -346,12 +371,12 @@ int check_destination_id(int id) {
     return -1;
   }
 
-  unsigned long long bit = 1ULL << id;  // 使用 unsigned long long 类型
+  unsigned long long bit = 1ULL << id;
   return (destination_id_indicator & bit) ? 1 : 0;
 }
 
 int set_destination_id(int id) {
-  unsigned long long bit = 1ULL << id;  // 使用 unsigned long long 类型
+  unsigned long long bit = 1ULL << id;
   destination_id_indicator |= bit;
   return 0;
 }
