@@ -49,3 +49,5 @@ int check_destination_name(char *name);
 int check_destination_id(int id);
 
 int set_destination_id(int id);
+
+int choose_destination();

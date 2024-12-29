@@ -50,5 +50,9 @@ int sort_by_date();
 // 显示规则函数声明
 int show_rules_all(Order* order, void* arg);
 int show_rules_today_by_level(Order* order, void* arg);
+int show_rules_by_date(Order* order, void* arg);
+int show_rules_by_name(Order* order, void* arg);
+int show_rules_by_destination(Order* order, void* arg);
+int show_rules_by_date_and_destination(Order* order, void* arg);
 
 int list_orders(int (*show_rules)(Order*, void*), void* arg);

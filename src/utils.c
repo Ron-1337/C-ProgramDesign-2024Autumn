@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_WARNINGS
+
 #include "utils.h"
 
 const int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -55,6 +57,29 @@ Date get_today() {
       .year = tm->tm_year + 1900, .month = tm->tm_mon + 1, .day = tm->tm_mday};
 }
 
+Date get_next_day(Date date) {
+  Date next_day = date;
+  next_day.day++;
+
+  int is_leap_year =
+      (date.year % 4 == 0 && date.year % 100 != 0) || (date.year % 400 == 0);
+
+  int max_days = days_in_month[next_day.month - 1];
+  if (next_day.month == 2 && is_leap_year) {
+    max_days++;
+  }
+
+  if (next_day.day > max_days) {
+    next_day.day = 1;
+    next_day.month++;
+    if (next_day.month > 12) {
+      next_day.month = 1;
+      next_day.year++;
+    }
+  }
+
+  return next_day;
+}
 int is_today(Date date) {
   Date today = get_today();
   return date.year == today.year && date.month == today.month &&
@@ -68,28 +93,22 @@ int is_tomorrow(Date date) {
     return 0;
   }
 
-  int is_leap_year =
-      (date.year % 4 == 0 && date.year % 100 != 0) || (date.year % 400 == 0);
-
-  Date tomorrow = today;
-  tomorrow.day++;
-
-  int max_days = days_in_month[tomorrow.month - 1];
-  if (tomorrow.month == 2 && is_leap_year) {
-    max_days++;
-  }
-
-  if (tomorrow.day > max_days) {
-    tomorrow.day = 1;
-    tomorrow.month++;
-    if (tomorrow.month > 12) {
-      tomorrow.month = 1;
-      tomorrow.year++;
-    }
-  }
+  Date tomorrow = get_next_day(today);
 
   return (date.year == tomorrow.year && date.month == tomorrow.month &&
           date.day == tomorrow.day);
 }
 
+/*
+请求示例
+https://geoapi.qweather.com/v2/city/lookup?location=巴黎&key=
+*/
+int get_locationID(char *city_name) { return 0; }
+
+/*
+请求示例
+https://devapi.qweather.com/v7/weather/3d?location=7FA1&key=
+*/
 int get_weather(char *weather, Date date, char *destination_name) { return 0; }
+
+int get_html(char *url, char *response) { return 0; }

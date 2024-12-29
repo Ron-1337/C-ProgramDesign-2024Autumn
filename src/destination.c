@@ -355,6 +355,23 @@ char *get_destination_name(int id) {
   return current->name;
 }
 
+// 从目的地列表中选择目的地
+int choose_destination() {
+  MenuList *destination_menu =
+      (MenuList *)malloc(sizeof(MenuList) * (destinations_count));
+  Destination *current = destinations_head;
+  int i = 0;
+  while (current != NULL) {
+    destination_menu[i].name = current->name;
+    destination_menu[i].value = current->id;
+    current = current->next;
+    i++;
+  }
+  int choice = show_menu("请选择目的地", destination_menu, destinations_count);
+  free(destination_menu);
+  return choice;
+}
+
 /* 检查目的地名称
 返回值: -1,0
 名称过长: -1

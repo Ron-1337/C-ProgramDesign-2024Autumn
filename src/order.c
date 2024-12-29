@@ -60,7 +60,7 @@ int show_orders() {
 int check_recent_order() {
   Order *current = orders_head;
   while (current != NULL) {
-    if (is_today(current->start_date)) {
+    if (is_today(current->start_date) || is_tomorrow(current->start_date)) {
       printf("[+] 最近订单: %s %s %d %d-%d-%d %d %.2f\n", current->name,
              LEVEL_NAME[current->level], current->destination_id,
              current->start_date.year, current->start_date.month,
@@ -117,20 +117,7 @@ int add_order() {
     return -1;
   }
 
-  // 从目的地列表中选择目的地
-  MenuList *destination_menu =
-      (MenuList *)malloc(sizeof(MenuList) * (destinations_count));
-  Destination *current = destinations_head;
-  int i = 0;
-  while (current != NULL) {
-    destination_menu[i].name = current->name;
-    destination_menu[i].value = current->id;
-    current = current->next;
-    i++;
-  }
-  new_order->destination_id =
-      show_menu("请选择目的地", destination_menu, destinations_count);
-  free(destination_menu);
+  new_order->destination_id = choose_destination();
 
   printf("开始日期(YYYY-MM-DD)：");
   scanf("%d%d%d", &new_order->start_date.year, &new_order->start_date.month,
@@ -283,17 +270,28 @@ int release_order_memory() {
 }
 
 int search_order_by_name() {
-  printf("[*] 正在按姓名搜索订单\n");
+  printf("输入你要查询的姓名: ");
+  char name[ORDER_NAME_MAX_LENGTH];
+  scanf("%s", name);
+  list_orders(show_rules_by_name, name);
   return 0;
 }
 
 int search_order_by_destination() {
-  printf("[*] 正在按目的地搜索订单\n");
+  int destination = choose_destination();
+  sort_by_price();
+  list_orders(show_rules_by_destination, &destination);
   return 0;
 }
 
 int search_order_by_date_and_destination() {
-  printf("[*] 正在按日期和目的地搜索订单\n");
+  DateAndDestination date_and_destination;
+  date_and_destination.destination_id = choose_destination();
+  printf("请输入你要查询的日期(YYYY-MM-DD): ");
+  scanf("%d%d%d", &date_and_destination.date.year,
+        &date_and_destination.date.month, &date_and_destination.date.day);
+  sort_by_level();
+  list_orders(show_rules_by_date_and_destination, &date_and_destination);
   return 0;
 }
 
@@ -309,7 +307,12 @@ int search_order_by_level() {
 }
 
 int search_order_by_date() {
-  printf("[*] 正在按日期搜索订单\n");
+  printf("请输入你要查询的日期(YYYY-MM-DD): ");
+  Date date;
+  scanf("%d%d%d", &date.year, &date.month, &date.day);
+
+  sort_by_level();
+  list_orders(show_rules_by_date, &date);
   return 0;
 }
 
@@ -392,6 +395,28 @@ int show_rules_all(Order *order, void *arg) { return 1; }
 
 int show_rules_today_by_level(Order *order, void *arg) {
   return order->level == *(int *)arg && is_today(order->start_date);
+}
+
+int show_rules_by_date(Order *order, void *arg) {
+  return order->start_date.year == ((Date *)arg)->year &&
+         order->start_date.month == ((Date *)arg)->month &&
+         order->start_date.day == ((Date *)arg)->day;
+}
+
+int show_rules_by_name(Order *order, void *arg) {
+  return strcmp(order->name, (char *)arg) == 0;
+}
+
+int show_rules_by_destination(Order *order, void *arg) {
+  return order->destination_id == *(int *)arg;
+}
+
+int show_rules_by_date_and_destination(Order *order, void *arg) {
+  DateAndDestination *date_and_destination = (DateAndDestination *)arg;
+  return order->start_date.year == date_and_destination->date.year &&
+         order->start_date.month == date_and_destination->date.month &&
+         order->start_date.day == date_and_destination->date.day &&
+         order->destination_id == date_and_destination->destination_id;
 }
 
 int list_orders(int (*show_rules)(Order *, void *), void *arg) {

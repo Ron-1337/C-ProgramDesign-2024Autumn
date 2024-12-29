@@ -27,6 +27,12 @@ typedef struct Destination {
   struct Destination *next;
 } Destination;
 
+/* 日期和目的地 */
+typedef struct DateAndDestination {
+  Date date;
+  int destination_id;
+} DateAndDestination;
+
 /* 订单 */
 typedef struct Order {
   char name[ORDER_NAME_MAX_LENGTH];
