@@ -36,7 +36,8 @@ int order_management() {
 }
 
 int show_orders() {
-  MenuList menu[] = {{"按用户等级排序", 1}, {"按订单金额排序", 2}};
+  MenuList menu[] = {
+      {"按用户等级排序", 1}, {"按订单金额排序", 2}, {"返回", -1}};
   int choice = show_menu("订单统计", menu, sizeof(menu) / sizeof(menu[0]));
   switch (choice) {
     case 1:
@@ -48,37 +49,52 @@ int show_orders() {
       sort_by_level();
       sort_by_price();
       break;
+    case -1:
+      return -1;
   }
 
-  system("cls");
-  printf("========================= 订单统计 ========================\n");
-  printf("%8s %4s %16s %10s %8s %8s\n", "姓名", "等级", "目的地", "开始日期",
-         "持续天数", "价格");
+  list_orders(show_rules_all, NULL);
+  return 0;
+}
+
+int check_recent_order() {
   Order *current = orders_head;
   while (current != NULL) {
-    printf("%8s %4s %16s %04d-%02d-%02d %8d %8.2f\n", current->name,
-           LEVEL_NAME[current->level],
-           get_destination_name(current->destination_id),
-           current->start_date.year, current->start_date.month,
-           current->start_date.day, current->duration, current->price);
+    if (is_today(current->start_date)) {
+      printf("[+] 最近订单: %s %s %d %d-%d-%d %d %.2f\n", current->name,
+             LEVEL_NAME[current->level], current->destination_id,
+             current->start_date.year, current->start_date.month,
+             current->start_date.day, current->duration, current->price);
+    }
     current = current->next;
   }
-  printf("===========================================================\n");
-  system("pause");
   return 0;
 }
 
 int search_order() {
-  MenuList menu[] = {{"按姓名搜索", 1}, {"按目的地搜索", 2}, {"返回", -1}};
+  MenuList menu[] = {{"按等级搜索(今天)", 1},   {"按日期搜索", 2},
+                     {"按姓名搜索", 3},         {"按目的地搜索", 4},
+                     {"按日期和目的地搜索", 5}, {"返回", -1}};
   int choice =
       show_menu("请选择搜索方式", menu, sizeof(menu) / sizeof(menu[0]));
   switch (choice) {
     case 1:
-      search_order_by_name();
+      search_order_by_level();
       break;
     case 2:
+      search_order_by_date();
+      break;
+    case 3:
+      search_order_by_name();
+      break;
+    case 4:
       search_order_by_destination();
       break;
+    case 5:
+      search_order_by_date_and_destination();
+      break;
+    case -1:
+      return -1;
   }
   return 0;
 }
@@ -276,11 +292,26 @@ int search_order_by_destination() {
   return 0;
 }
 
-// 按等级从高到低排序
-int compare_by_level(Order *a, Order *b) { return b->level - a->level; }
+int search_order_by_date_and_destination() {
+  printf("[*] 正在按日期和目的地搜索订单\n");
+  return 0;
+}
 
-// 按价格从高到低排序
-int compare_by_price(Order *a, Order *b) { return b->price - a->price; }
+int search_order_by_level() {
+  MenuList menu[] = {
+      {"钻石", 3}, {"黄金", 2}, {"白银", 1}, {"青铜", 0}, {"返回", -1}};
+  int choice = show_menu("请选择等级", menu, sizeof(menu) / sizeof(menu[0]));
+  if (choice == -1) {
+    return -1;
+  }
+  list_orders(show_rules_today_by_level, &choice);
+  return 0;
+}
+
+int search_order_by_date() {
+  printf("[*] 正在按日期搜索订单\n");
+  return 0;
+}
 
 // 排序函数 传入比较函数
 int sort_orders(CompareFunc compare) {
@@ -334,8 +365,62 @@ int sort_orders(CompareFunc compare) {
   return 0;
 }
 
+// 比较函数：按等级从高到低排序
+int compare_by_level(Order *a, Order *b) { return b->level - a->level; }
+
+// 比较函数：按价格从高到低排序
+int compare_by_price(Order *a, Order *b) { return b->price - a->price; }
+
+// 比较函数：按日期从早到晚排序
+int compare_by_date(Order *a, Order *b) {
+  return (a->start_date.year * 10000 + a->start_date.month * 100 +
+          a->start_date.day) -
+         (b->start_date.year * 10000 + b->start_date.month * 100 +
+          b->start_date.day);
+}
+
 // 按等级排序的包装函数
 int sort_by_level() { return sort_orders(compare_by_level); }
 
 // 按价格排序的包装函数
 int sort_by_price() { return sort_orders(compare_by_price); }
+
+// 按开始日期排序的包装函数
+int sort_by_date() { return sort_orders(compare_by_date); }
+
+int show_rules_all(Order *order, void *arg) { return 1; }
+
+int show_rules_today_by_level(Order *order, void *arg) {
+  return order->level == *(int *)arg && is_today(order->start_date);
+}
+
+int list_orders(int (*show_rules)(Order *, void *), void *arg) {
+  int count = 0;
+
+  Order *current = orders_head;
+  while (current != NULL) {
+    if (show_rules(current, arg)) {
+      if (count == 0) {
+        system("cls");
+        printf("========================= 订单统计 ========================\n");
+        printf("%8s %4s %16s %10s %8s %8s\n", "姓名", "等级", "目的地",
+               "开始日期", "持续天数", "价格");
+      }
+      printf("%8s %4s %16s %04d-%02d-%02d %8d %8.2f\n", current->name,
+             LEVEL_NAME[current->level],
+             get_destination_name(current->destination_id),
+             current->start_date.year, current->start_date.month,
+             current->start_date.day, current->duration, current->price);
+      count++;
+    }
+    current = current->next;
+  }
+
+  if (count != 0) {
+    printf("===========================================================\n");
+  } else {
+    printf("[-] 没有找到符合条件的订单\n");
+  }
+  system("pause");
+  return 0;
+}

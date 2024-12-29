@@ -9,6 +9,7 @@
 
 extern Destination *destinations_head;
 extern Destination *destinations_tail;
+extern Order *orders_head;
 extern unsigned int destinations_count;
 
 extern unsigned long long destination_id_indicator;
@@ -38,6 +39,8 @@ int delete_destination_by_id();
 int delete_destination_by_name();
 
 char *get_destination_name(int id);
+
+int destination_is_used(int id);
 
 int check_destination(Destination *destination);
 

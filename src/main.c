@@ -18,6 +18,7 @@ int init();
 
 int main() {
   init();
+  check_recent_order();
   MenuList menu_list[] = {
       {"订单管理", 1},
       {"目的地管理", 2},

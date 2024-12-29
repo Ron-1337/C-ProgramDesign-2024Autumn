@@ -293,6 +293,10 @@ int delete_destination_by_id() {
         printf("[-] 目的地ID不存在\n");
         return -1;
       }
+      if (destination_is_used(current->id)) {
+        printf("[-] 目的地ID被占用\n");
+        return -1;
+      }
       if (prev == NULL) {
         destinations_head = current->next;
       } else {
@@ -319,22 +323,25 @@ int delete_destination_by_name() {
     prev = current;
     current = current->next;
   }
-  if (current != NULL) {
-    if (prev == NULL) {
-      destinations_head = current->next;
-    } else {
-      prev->next = current->next;
-    }
-    if (current == destinations_tail) {
-      destinations_tail = prev;
-    }
-    printf("[+] 已删除目的地ID: %d, 目的地名称: %s\n", current->id,
-           current->name);
-    return 0;
-  } else {
-    printf("[-] 目的地名称不存在\n");
+  if (current == NULL) {
+    printf("[-] 目的地ID不存在\n");
     return -1;
   }
+  if (destination_is_used(current->id)) {
+    printf("[-] 目的地ID被占用\n");
+    return -1;
+  }
+  if (prev == NULL) {
+    destinations_head = current->next;
+  } else {
+    prev->next = current->next;
+  }
+  if (current == destinations_tail) {
+    destinations_tail = prev;
+  }
+  printf("[+] 已删除目的地ID: %d, 目的地名称: %s\n", current->id,
+         current->name);
+  return 0;
 }
 
 char *get_destination_name(int id) {
@@ -378,5 +385,16 @@ int check_destination_id(int id) {
 int set_destination_id(int id) {
   unsigned long long bit = 1ULL << id;
   destination_id_indicator |= bit;
+  return 0;
+}
+
+int destination_is_used(int id) {
+  Order *current = orders_head;
+  while (current != NULL) {
+    if (current->destination_id == id) {
+      return 1;
+    }
+    current = current->next;
+  }
   return 0;
 }
