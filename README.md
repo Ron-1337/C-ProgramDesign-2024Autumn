@@ -30,6 +30,8 @@
   2025-01-10  雨雪天气     0°C   5°C
   ```
 
+- 后端的实现部分位于[partial.go](/backend/partial.go) 采用Golang实现
+
 ## 目录
 
 - [src](./src) 源代码
