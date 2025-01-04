@@ -4,7 +4,7 @@
 
 const int days_in_month[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
-int show_menu(char* title, MenuList menu_list[], int count) {
+int show_menu(char *title, MenuList menu_list[], int count) {
   // 菜单项
   int currentChoice = 0;
   char key;
@@ -25,11 +25,13 @@ int show_menu(char* title, MenuList menu_list[], int count) {
       }
     }
     printf("\n");
-    printf("使用方向键↑↓选择, 回车确认, 或直接按选项字母\n");
+    printf("使用方向键↑↓选择, 回车确认, 或直接按选项字母, ESC返回\n");
 
     // 读取按键
     key = _getch();
-    if (_kbhit()) {
+    if (key == KEY_ESC) {
+      return -1;
+    } else if (_kbhit()) {
       key = _getch();
       switch (key) {
         case KEY_UP:
@@ -52,7 +54,7 @@ int show_menu(char* title, MenuList menu_list[], int count) {
 
 Date get_today() {
   time_t now = time(NULL);
-  struct tm* tm = localtime(&now);
+  struct tm *tm = localtime(&now);
   return (Date){
       .year = tm->tm_year + 1900, .month = tm->tm_mon + 1, .day = tm->tm_mday};
 }
@@ -102,108 +104,172 @@ int time_diff(Date date) {
   return difftime(time2, time1) / 86400;
 }
 
-char* http_get(const char* host, const char* path) {
-  DWORD data_len = 0;
-  char* response_data = NULL;
-
-  // 初始化WinHTTP
-  HINTERNET h_session =
-      WinHttpOpen(L"Weather API Client", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+char *http_get(const wchar_t *server, const wchar_t *path, size_t *resultSize) {
+  // 初始化 WinHTTP 会话
+  HINTERNET hSession =
+      WinHttpOpen(L"WinHTTP Example/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
                   WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
-  if (!h_session) {
+
+  if (!hSession) {
+    wprintf(L"WinHttpOpen failed with error: %d\n", GetLastError());
     return NULL;
   }
 
-  // 转换host到宽字符
-  int host_len = MultiByteToWideChar(CP_UTF8, 0, host, -1, NULL, 0);
-  wchar_t* wide_host = (wchar_t*)malloc(host_len * sizeof(wchar_t));
-  MultiByteToWideChar(CP_UTF8, 0, host, -1, wide_host, host_len);
-
-  // 转换path到宽字符
-  int path_len = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
-  wchar_t* wide_path = (wchar_t*)malloc(path_len * sizeof(wchar_t));
-  MultiByteToWideChar(CP_UTF8, 0, path, -1, wide_path, path_len);
-
   // 连接到服务器
-  HINTERNET h_connect =
-      WinHttpConnect(h_session, wide_host, INTERNET_DEFAULT_HTTPS_PORT, 0);
-  if (h_connect) {
-    // 创建请求句柄
-    HINTERNET h_request = WinHttpOpenRequest(
-        h_connect, L"GET", wide_path, NULL, WINHTTP_NO_REFERER,
-        WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
-    if (h_request) {
-      // 添加Accept-Encoding头
-      LPCWSTR headers = L"Accept-Encoding: gzip";
-      WinHttpAddRequestHeaders(h_request, headers, -1L,
-                               WINHTTP_ADDREQ_FLAG_ADD);
-
-      // 发送请求
-      if (WinHttpSendRequest(h_request, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
-                             WINHTTP_NO_REQUEST_DATA, 0, 0, 0) &&
-          WinHttpReceiveResponse(h_request, NULL)) {
-        // 检查是否是gzip压缩的响应
-        DWORD size = 0;
-        DWORD index = 0;
-        BOOL is_gzipped = FALSE;
-        WinHttpQueryHeaders(h_request, WINHTTP_QUERY_CONTENT_ENCODING,
-                            WINHTTP_HEADER_NAME_BY_INDEX, NULL, &size, &index);
-        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
-          wchar_t* encoding = (wchar_t*)malloc(size);
-          if (WinHttpQueryHeaders(h_request, WINHTTP_QUERY_CONTENT_ENCODING,
-                                  WINHTTP_HEADER_NAME_BY_INDEX, encoding, &size,
-                                  &index)) {
-            is_gzipped = (wcscmp(encoding, L"gzip") == 0);
-          }
-          free(encoding);
-        }
-
-        // 读取响应数据
-        DWORD available_size = 0;
-        DWORD downloaded_size = 0;
-        DWORD buffer_size = 0;
-        char* temp_buffer = NULL;
-
-        do {
-          available_size = 0;
-          WinHttpQueryDataAvailable(h_request, &available_size);
-
-          if (available_size > 0) {
-            temp_buffer =
-                (char*)realloc(response_data, data_len + available_size + 1);
-            if (temp_buffer) {
-              response_data = temp_buffer;
-              buffer_size = available_size;
-
-              if (WinHttpReadData(h_request, response_data + data_len,
-                                  buffer_size, &downloaded_size)) {
-                data_len += downloaded_size;
-                response_data[data_len] = '\0';
-              }
-            }
-          }
-        } while (available_size > 0);
-      }
-      WinHttpCloseHandle(h_request);
-    }
-    WinHttpCloseHandle(h_connect);
+  HINTERNET hConnect =
+      WinHttpConnect(hSession, server, INTERNET_DEFAULT_HTTPS_PORT, 0);
+  if (!hConnect) {
+    wprintf(L"WinHttpConnect failed with error: %d\n", GetLastError());
+    WinHttpCloseHandle(hSession);
+    return NULL;
   }
 
-  // 清理资源
-  free(wide_host);
-  free(wide_path);
-  WinHttpCloseHandle(h_session);
+  // 创建请求句柄
+  HINTERNET hRequest =
+      WinHttpOpenRequest(hConnect, L"GET", path, NULL, WINHTTP_NO_REFERER,
+                         WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
 
-  return response_data;
+  if (!hRequest) {
+    wprintf(L"WinHttpOpenRequest failed with error: %d\n", GetLastError());
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return NULL;
+  }
+
+  // 发送请求
+  if (!WinHttpSendRequest(hRequest, WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+                          WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+    wprintf(L"WinHttpSendRequest failed with error: %d\n", GetLastError());
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return NULL;
+  }
+
+  // 接收响应
+  if (!WinHttpReceiveResponse(hRequest, NULL)) {
+    wprintf(L"WinHttpReceiveResponse failed with error: %d\n", GetLastError());
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return NULL;
+  }
+
+  // 读取数据
+  DWORD dwSize = 0, dwDownloaded = 0;
+  BYTE *responseBuffer = NULL;
+  DWORD totalSize = 0;
+
+  do {
+    // 查询响应数据块大小
+    if (!WinHttpQueryDataAvailable(hRequest, &dwSize)) {
+      wprintf(L"WinHttpQueryDataAvailable failed with error: %d\n",
+              GetLastError());
+      break;
+    }
+
+    if (dwSize == 0) break;
+
+    // 分配缓冲区
+    BYTE *tempBuffer = (BYTE *)malloc(dwSize);
+    if (!tempBuffer) {
+      wprintf(L"Memory allocation failed\n");
+      break;
+    }
+
+    // 读取数据
+    if (!WinHttpReadData(hRequest, tempBuffer, dwSize, &dwDownloaded)) {
+      wprintf(L"WinHttpReadData failed with error: %d\n", GetLastError());
+      free(tempBuffer);
+      break;
+    }
+
+    // 将数据拼接到响应缓冲区
+    responseBuffer = (BYTE *)realloc(responseBuffer, totalSize + dwDownloaded);
+    if (!responseBuffer) {
+      wprintf(L"Memory reallocation failed\n");
+      free(tempBuffer);
+      break;
+    }
+
+    memcpy(responseBuffer + totalSize, tempBuffer, dwDownloaded);
+    totalSize += dwDownloaded;
+
+    free(tempBuffer);
+  } while (dwSize > 0);
+
+  // 关闭句柄
+  WinHttpCloseHandle(hRequest);
+  WinHttpCloseHandle(hConnect);
+  WinHttpCloseHandle(hSession);
+
+  if (totalSize == 0) {
+    wprintf(L"No response data received.\n");
+    free(responseBuffer);
+    return NULL;
+  }
+
+  // UTF-8 转换为 GBK
+  int utf8Length = (int)totalSize;
+  int wideLength = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)responseBuffer,
+                                       utf8Length, NULL, 0);
+
+  if (wideLength == 0) {
+    wprintf(L"MultiByteToWideChar failed with error: %d\n", GetLastError());
+    free(responseBuffer);
+    return NULL;
+  }
+
+  wchar_t *wideBuffer = (wchar_t *)malloc(wideLength * sizeof(wchar_t));
+  if (!wideBuffer) {
+    wprintf(L"Memory allocation failed\n");
+    free(responseBuffer);
+    return NULL;
+  }
+
+  MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)responseBuffer, utf8Length,
+                      wideBuffer, wideLength);
+
+  int gbkLength = WideCharToMultiByte(CP_ACP, 0, wideBuffer, wideLength, NULL,
+                                      0, NULL, NULL);
+  if (gbkLength == 0) {
+    wprintf(L"WideCharToMultiByte failed with error: %d\n", GetLastError());
+    free(responseBuffer);
+    free(wideBuffer);
+    return NULL;
+  }
+
+  char *gbkBuffer = (char *)malloc(gbkLength + 1);  // +1 for null terminator
+  if (!gbkBuffer) {
+    wprintf(L"Memory allocation failed\n");
+    free(responseBuffer);
+    free(wideBuffer);
+    return NULL;
+  }
+
+  WideCharToMultiByte(CP_ACP, 0, wideBuffer, wideLength, gbkBuffer, gbkLength,
+                      NULL, NULL);
+
+  // 释放内存
+  free(responseBuffer);
+  free(wideBuffer);
+
+  // 添加 null terminator
+  gbkBuffer[gbkLength] = '\0';
+
+  // 设置返回大小
+  *resultSize = gbkLength;
+
+  return gbkBuffer;
 }
 
-char* url_encode(const char* str) {
+char *url_encode(const char *str) {
   if (str == NULL) return NULL;
 
   // 计算编码后的长度
   int len = strlen(str);
-  char* encoded =
-      (char*)malloc(len * 3 + 1);  // 最坏情况：每个字符都需要编码（变成%XX）
+  char *encoded =
+      (char *)malloc(len * 3 + 1);  // 最坏情况：每个字符都需要编码（变成%XX）
   if (!encoded) return NULL;
 
   int j = 0;
@@ -220,5 +286,3 @@ char* url_encode(const char* str) {
 
   return encoded;
 }
-
-// 天气

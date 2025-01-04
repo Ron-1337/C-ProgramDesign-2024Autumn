@@ -6,6 +6,7 @@
 #define KEY_ENTER 13
 #define DESTINATION_NAME_MAX_LENGTH 16
 #define ORDER_NAME_MAX_LENGTH 16
+#define KEY_ESC 27
 
 /* µÈ¼¶ */
 enum Level { BRONZE = 1, SILVER, GOLD, DIAMOND };

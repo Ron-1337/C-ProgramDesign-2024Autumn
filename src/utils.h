@@ -7,7 +7,6 @@
 #include <winhttp.h>
 
 #pragma comment(lib, "winhttp.lib")
-#pragma comment(lib, "zlib.lib")
 
 #include "define.h"
 
@@ -24,7 +23,7 @@ int time_diff(Date date);
 int get_locationID(char* city_name);
 
 // HTTP请求函数
-char* http_get(const char* host, const char* path);
+char* http_get(const wchar_t* server, const wchar_t* path, size_t* resultSize);
 
 // URL编码函数
 char* url_encode(const char* str);

@@ -130,7 +130,6 @@ int load_destinations() {
   FILE *file = fopen(DESTINATION_FILE, "r");
   if (file == NULL) {
     printf("[-] 无法打开文件%s\n", DESTINATION_FILE);
-    fclose(file);
     return -1;
   }
 
@@ -428,6 +427,10 @@ int destination_is_used(int id) {
 
 int destination_time() {
   int choice = choose_destination();
+  if (choice == -1) {
+    return -1;
+  }
+
   Destination *destination = get_destination_by_id(choice);
   time_t now = time(NULL);
   struct tm *timeinfo = localtime(&now);

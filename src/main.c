@@ -17,12 +17,12 @@ unsigned int orders_count = 0;
 
 int init();
 void test();
+int get_weather();
 
 int main() {
-  test();
   init();
   check_recent_order();
-  Sleep(3000);
+  Sleep(1000);
   MenuList menu_list[] = {
       {"订单管理", 1}, {"目的地管理", 2}, {"最近订单", 3},
       {"天气查询", 4}, {"目的地时间", 5}, {"退出", -1},
@@ -43,7 +43,7 @@ int main() {
         system("pause");
         break;
       case 4:
-        // weather_query();
+        get_weather();
         break;
       case 5:
         destination_time();
@@ -65,5 +65,45 @@ int init() {
     return -1;
   }
   printf("[+] 初始化完成\n");
+  return 0;
+}
+
+int get_weather() {
+  int choice = choose_destination();
+  if (choice == -1) {
+    return -1;
+  }
+
+  Destination* des = get_destination_by_id(choice);
+  if (des == NULL) {
+    printf("[-] 未找到目的地信息\n");
+    system("pause");
+    return -1;
+  }
+
+  // system("cls");
+  printf("[*] 正在获取天气...\r");
+
+  const wchar_t* server = L"api.zzpeng.com";
+
+  // 构建请求路径
+  wchar_t path[256];
+  wchar_t location[128];
+  MultiByteToWideChar(CP_ACP, 0, des->name, -1, location,
+                      sizeof(location) / sizeof(wchar_t));
+  swprintf(path, sizeof(path) / sizeof(wchar_t), L"/weather?location=%ls",
+           location);
+
+  size_t resultSize = 0;
+  char* result = http_get(server, path, &resultSize);
+
+  if (result) {
+    printf("[+] 获取天气成功    \n");
+    printf("%s 七日天气\n%s\n", des->name, result);
+    free(result);
+  } else {
+    printf("[-] 获取天气失败\n");
+  }
+  system("pause");
   return 0;
 }
