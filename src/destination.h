@@ -51,3 +51,7 @@ int check_destination_id(int id);
 int set_destination_id(int id);
 
 int choose_destination();
+
+int destination_time();
+
+Destination *get_destination_by_id(int id);

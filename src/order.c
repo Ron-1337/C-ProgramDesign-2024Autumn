@@ -58,15 +58,24 @@ int show_orders() {
 }
 
 int check_recent_order() {
+  system("cls");
   Order *current = orders_head;
+  int count = 0;
   while (current != NULL) {
-    if (is_today(current->start_date) || is_tomorrow(current->start_date)) {
+    int diff = time_diff(current->start_date);
+    if (diff <= current->duration && diff >= -1) {
+      count++;
       printf("[+] 最近订单: %s %s %d %d-%d-%d %d %.2f\n", current->name,
              LEVEL_NAME[current->level], current->destination_id,
              current->start_date.year, current->start_date.month,
              current->start_date.day, current->duration, current->price);
     }
     current = current->next;
+  }
+  if (count == 0) {
+    printf("[-] 没有最近订单\n");
+  } else {
+    printf("[+] 最近订单数量: %d\n", count);
   }
   return 0;
 }
@@ -394,7 +403,7 @@ int sort_by_date() { return sort_orders(compare_by_date); }
 int show_rules_all(Order *order, void *arg) { return 1; }
 
 int show_rules_today_by_level(Order *order, void *arg) {
-  return order->level == *(int *)arg && is_today(order->start_date);
+  return order->level == *(int *)arg && time_diff(order->start_date) == 0;
 }
 
 int show_rules_by_date(Order *order, void *arg) {

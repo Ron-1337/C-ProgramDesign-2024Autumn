@@ -4,7 +4,7 @@
 #define KEY_UP 72
 #define KEY_DOWN 80
 #define KEY_ENTER 13
-#define DESTINATION_NAME_MAX_LENGTH 8
+#define DESTINATION_NAME_MAX_LENGTH 16
 #define ORDER_NAME_MAX_LENGTH 16
 
 /* µÈ¼¶ */
@@ -24,6 +24,7 @@ typedef struct Date {
 typedef struct Destination {
   int id;
   char name[DESTINATION_NAME_MAX_LENGTH];
+  int time_zone;
   struct Destination *next;
 } Destination;
 

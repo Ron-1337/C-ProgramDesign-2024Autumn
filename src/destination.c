@@ -136,11 +136,13 @@ int load_destinations() {
 
   int id;
   char name[21];
+  int time_zone;
 
-  while (fscanf(file, "%d %16s", &id, name) != EOF) {
+  while (fscanf(file, "%d %16s %d", &id, name, &time_zone) != EOF) {
     Destination *new_dest = (Destination *)malloc(sizeof(Destination));
     new_dest->id = id;
     strcpy(new_dest->name, name);
+    new_dest->time_zone = time_zone;
     new_dest->next = NULL;
 
     // 检查
@@ -183,7 +185,7 @@ int save_destinations() {
   }
 
   while (current != NULL) {
-    fprintf(file, "%d %s\n", current->id, current->name);
+    fprintf(file, "%d %s %d\n", current->id, current->name, current->time_zone);
     current = current->next;
     destinations_count++;
   }
@@ -355,7 +357,15 @@ char *get_destination_name(int id) {
   return current->name;
 }
 
-// 从目的地列表中选择目的地
+Destination *get_destination_by_id(int id) {
+  Destination *current = destinations_head;
+  while (current != NULL && current->id != id) {
+    current = current->next;
+  }
+  return current;
+}
+
+// 从目的地列表中选择目的地 返回目的地ID
 int choose_destination() {
   MenuList *destination_menu =
       (MenuList *)malloc(sizeof(MenuList) * (destinations_count));
@@ -413,5 +423,21 @@ int destination_is_used(int id) {
     }
     current = current->next;
   }
+  return 0;
+}
+
+int destination_time() {
+  int choice = choose_destination();
+  Destination *destination = get_destination_by_id(choice);
+  time_t now = time(NULL);
+  struct tm *timeinfo = localtime(&now);
+  int hour = timeinfo->tm_hour;
+  int minute = timeinfo->tm_min;
+  int second = timeinfo->tm_sec;
+  int time_zone = destination->time_zone;
+  printf("本地时间: %d:%02d:%02d\n", hour, minute, second);
+  printf("%s时间: %d:%02d:%02d\n", destination->name,
+         (hour - 8 + time_zone + 24) % 24, minute, second);
+  system("pause");
   return 0;
 }

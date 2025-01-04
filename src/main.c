@@ -7,22 +7,25 @@
 #include "order.h"
 #include "utils.h"
 
-Destination *destinations_head = NULL;
-Destination *destinations_tail = NULL;
-Order *orders_head = NULL;
-Order *orders_tail = NULL;
+Destination* destinations_head = NULL;
+Destination* destinations_tail = NULL;
+Order* orders_head = NULL;
+Order* orders_tail = NULL;
 
 unsigned int destinations_count = 0;
 unsigned int orders_count = 0;
+
 int init();
+void test();
 
 int main() {
+  test();
   init();
   check_recent_order();
+  Sleep(3000);
   MenuList menu_list[] = {
-      {"订单管理", 1},
-      {"目的地管理", 2},
-      {"退出", -1},
+      {"订单管理", 1}, {"目的地管理", 2}, {"最近订单", 3},
+      {"天气查询", 4}, {"目的地时间", 5}, {"退出", -1},
   };
   int choice = 0;
   while (choice != -1) {
@@ -35,6 +38,15 @@ int main() {
       case 2:
         destination_management();
         break;
+      case 3:
+        check_recent_order();
+        system("pause");
+        break;
+      case 4:
+        // weather_query();
+        break;
+      case 5:
+        destination_time();
     }
   }
   release_destination_memory();

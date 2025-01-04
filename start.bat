@@ -14,7 +14,7 @@ gcc -c src/destination.c -o bin/destination.o -Isrc
 gcc -c src/order.c -o bin/order.o -Isrc
 
 echo [+] 链接目标文件
-gcc bin/main.o bin/utils.o bin/define.o bin/destination.o bin/order.o -o bin/CourseDesign.exe -lwinhttp
+gcc bin/main.o bin/utils.o bin/define.o bin/destination.o bin/order.o -o bin/CourseDesign.exe -lwinhttp -lz
 echo [+] 编译完成
 echo [+] 开始运行
 bin\CourseDesign.exe
