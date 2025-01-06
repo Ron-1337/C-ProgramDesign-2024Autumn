@@ -22,8 +22,8 @@ int time_diff(Date date);
 
 int get_locationID(char* city_name);
 
-// HTTPè¯·æ±‚å‡½æ•°
+// HTTPÇëÇóº¯Êı
 char* http_get(const wchar_t* server, const wchar_t* path, size_t* resultSize);
 
-// URLç¼–ç å‡½æ•°
+// URL±àÂëº¯Êı
 char* url_encode(const char* str);
